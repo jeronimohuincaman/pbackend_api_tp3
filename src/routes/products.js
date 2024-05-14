@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const productos = require('../models/products.model')
+const productos = require('../models/products.model');
 
 router.get('/', (req, res) => {
     let productosFiltrados = [...productos];
@@ -25,6 +25,27 @@ router.get('/', (req, res) => {
     }
 
     return res.status(200).json(productosFiltrados);
+});
+
+router.get('/promedio', (req, res) => {
+    const { params } = req;
+    let filteredProductos = [...productos];
+
+    console.log(params)
+
+    if (params.categoria) {
+        filteredProductos = filteredProductos.filter(p => p.categoria.includes(params.categoria));
+    }
+
+    let precios_totales = 0;
+    let resultado_promedio = 0;
+
+    filteredProductos.forEach((p, i) => {
+        precios_totales += p.precio;
+    });
+
+    resultado_promedio = parseFloat((precios_totales / productos.length).toFixed(2));
+    return res.status(200).json({ promedio_de_precios: resultado_promedio })
 });
 
 router.get('/:categoria', (req, res) => {
@@ -71,10 +92,8 @@ router.post('/codificar', (req, res) => {
         });
         return res.status(201).json(productosFiltrados)
     };
-
-
-
 });
+
 
 router.post('/', (req, res) => {
     const { body } = req;
