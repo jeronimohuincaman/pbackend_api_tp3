@@ -31,8 +31,6 @@ router.get('/promedio', (req, res) => {
     const { params } = req;
     let filteredProductos = [...productos];
 
-    console.log(params)
-
     if (params.categoria) {
         filteredProductos = filteredProductos.filter(p => p.categoria.includes(params.categoria));
     }
@@ -46,6 +44,31 @@ router.get('/promedio', (req, res) => {
 
     resultado_promedio = parseFloat((precios_totales / productos.length).toFixed(2));
     return res.status(200).json({ promedio_de_precios: resultado_promedio })
+});
+
+router.get('/promedio/:categoria', (req, res) => {
+    const { params } = req;
+    const categoriaBuscada = params.categoria;
+    let filteredProductos = [];
+    let total_acumulado = 0;
+    let promedio = 0;
+    let respuesta = {};
+
+    filteredProductos = productos.filter(p => p.categoria.toLowerCase() === categoriaBuscada.toLowerCase());
+
+    if (filteredProductos.length === 0) {
+        return res.status(400).json({ result: 'No existe esa categoria' });
+    }
+
+    filteredProductos.forEach(p => {
+        total_acumulado += p.precio;
+    });
+
+    promedio = parseFloat((total_acumulado / filteredProductos.length).toFixed(2));
+
+    respuesta[`promedio_${categoriaBuscada}`] = promedio;
+
+    return res.status(200).json(respuesta);
 });
 
 router.get('/:categoria', (req, res) => {
