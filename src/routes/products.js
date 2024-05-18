@@ -28,47 +28,26 @@ router.get('/', (req, res) => {
 });
 
 router.get('/promedio', (req, res) => {
-    const { params } = req;
-    let filteredProductos = [...productos];
-
-    if (params.categoria) {
-        filteredProductos = filteredProductos.filter(p => p.categoria.includes(params.categoria));
-    }
-
+    const { params, query } = req;
     let precios_totales = 0;
     let resultado_promedio = 0;
+    let filteredProductos = [...productos];
+    let respuesta = {};
+
+    if (query.categoria) {
+        filteredProductos = filteredProductos.filter(p => p.categoria.toLowerCase().includes(query.categoria.toLowerCase()));
+        respuesta['categoria'] = filteredProductos[0].categoria;
+    }
 
     filteredProductos.forEach((p, i) => {
         precios_totales += p.precio;
     });
-
+    
     resultado_promedio = parseFloat((precios_totales / productos.length).toFixed(2));
-    return res.status(200).json({ promedio_de_precios: resultado_promedio })
-});
 
-router.get('/promedio/:categoria', (req, res) => {
-    const { params } = req;
-    const categoriaBuscada = params.categoria;
-    let filteredProductos = [];
-    let total_acumulado = 0;
-    let promedio = 0;
-    let respuesta = {};
+    respuesta[`promedio_precios`] = resultado_promedio;
 
-    filteredProductos = productos.filter(p => p.categoria.toLowerCase() === categoriaBuscada.toLowerCase());
-
-    if (filteredProductos.length === 0) {
-        return res.status(400).json({ result: 'No existe esa categoria' });
-    }
-
-    filteredProductos.forEach(p => {
-        total_acumulado += p.precio;
-    });
-
-    promedio = parseFloat((total_acumulado / filteredProductos.length).toFixed(2));
-
-    respuesta[`promedio_${categoriaBuscada}`] = promedio;
-
-    return res.status(200).json(respuesta);
+    return res.status(200).json(respuesta)
 });
 
 router.get('/:categoria', (req, res) => {
