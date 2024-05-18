@@ -36,13 +36,16 @@ router.get('/promedio', (req, res) => {
 
     if (query.categoria) {
         filteredProductos = filteredProductos.filter(p => p.categoria.toLowerCase().includes(query.categoria.toLowerCase()));
+        if (filteredProductos.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron productos con esa categoria' });
+        }
         respuesta['categoria'] = filteredProductos[0].categoria;
     }
 
     filteredProductos.forEach((p, i) => {
         precios_totales += p.precio;
     });
-    
+
     resultado_promedio = parseFloat((precios_totales / productos.length).toFixed(2));
 
     respuesta[`promedio_precios`] = resultado_promedio;
@@ -50,25 +53,53 @@ router.get('/promedio', (req, res) => {
     return res.status(200).json(respuesta)
 });
 
+router.get('/top', (req, res) => {
+    const { query } = req;
+    let filteredProductos = [...productos];
+    let respuesta = {};
+
+    if (query.sort === 'precioAsc') {
+        filteredProductos = filteredProductos.sort((a, b) => a.precio - b.precio);
+        respuesta[`ordenamiento`] = 'ascendente';
+    } else if (query.sort === 'precioDesc') {
+        filteredProductos = filteredProductos.sort((a, b) => b.precio - a.precio);
+        respuesta[`ordenamiento`] = 'descendente';
+    } else {
+        return res.status(404).json({ message: 'No se conoce ese tipo de ordenamiento' });
+    };
+
+    if (query.cantidad > 0) {
+        filteredProductos = filteredProductos.slice(0, query.cantidad);
+        respuesta['limitacion'] = query.cantidad;
+    } else {
+        return res.status(404).json({ message: 'Debe limitar por un numero mayor a cero' });
+    };
+
+    respuesta['result'] = filteredProductos;
+
+    return res.status(200).json(respuesta);
+});
+
 router.get('/:categoria', (req, res) => {
     const { params } = req;
     const categoriaBuscada = params.categoria;
-    let productosPorCategoria = {};
+    let filteredProducto = [...productos];
+    let respuesta = {};
+    let contador = 0;
 
-    productos.forEach(p => {
-        // Verifica si el producto pertenece a la categoría buscada
-        if (p.categoria === categoriaBuscada) {
-            // Si la categoría ya existe en el objeto, incrementa su contador
-            if (categoriaBuscada in productosPorCategoria) {
-                productosPorCategoria[categoriaBuscada]++;
-            } else {
-                // Si la categoría no existe, inicializa su contador en 1
-                productosPorCategoria[categoriaBuscada] = 1;
-            }
-        }
-    });
+    filteredProducto = productos.filter(p => p.categoria.toLowerCase().includes(categoriaBuscada.toLowerCase()));
 
-    return res.status(200).json(productosPorCategoria);
+    if (filteredProducto.length === 0) {
+        return res.status(404).json({ message: 'No se encontraron productos con esa categoria' })
+    } else {
+        filteredProducto.forEach((p, i) => {
+            contador++;
+        });
+        respuesta[`categoria`] = params.categoria;
+        respuesta[`cantidad_productos`] = contador;
+    }
+
+    return res.status(200).json(respuesta);
 });
 
 router.post('/codificar', (req, res) => {
