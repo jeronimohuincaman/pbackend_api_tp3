@@ -1,7 +1,7 @@
-#Trabajo practico N° 3 - Api con NODE JS
+# Trabajo practico N° 3 - Api con NODE JS
 En este proyecto se realizo un api de productos siguiendo las consignas brindadas por el profesor.
 
-##Tabla de contenidos
+## Tabla de contenidos
 1. [ Instalacion y uso ](#instalacion y uso)
 2. [ ABM base ](#abm base)
 3. [ Agrupación y conteo ](#Agrupación y conteo)
@@ -9,7 +9,7 @@ En este proyecto se realizo un api de productos siguiendo las consignas brindada
 5. [ Cálculo en colecciones ](#Cálculo en colecciones)
 6. [ Ordenación y top n elementos ](#Ordenación y top n elementos)
 
-##Instalacion y uso
+## Instalacion y uso
 Para instalar y configurar este proyecto, sigue estos pasos:
 ```bash
 # Clonar el repositorio
