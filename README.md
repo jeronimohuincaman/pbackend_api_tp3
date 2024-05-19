@@ -27,7 +27,6 @@ npm start
 ```http
 GET localhost:3001/products
 ```
-## Obtener productos con ciertos parametros
 ```http
 GET localhost:3001/products?nombre=a&categoria=Her
 ```
@@ -67,7 +66,6 @@ POST localhost:3001/products/codificar
 ```http
 GET localhost:3001/products/promedio
 ```
-#### Filtrar por categoria
 ```http
 GET localhost:3001/products/promedio?categoria=her
 ```
