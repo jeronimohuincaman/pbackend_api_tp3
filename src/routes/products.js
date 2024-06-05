@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const productos = require('../models/products.model');
+// const productos = require('../models/products.model');
+const Producto = require('../models/products.model');
 
 router.get('/', (req, res) => {
     let productosFiltrados = [...productos];
