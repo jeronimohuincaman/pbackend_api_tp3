@@ -4,54 +4,70 @@ const router = express.Router();
 // const productos = require('../models/products.model');
 const Producto = require('../models/products.model');
 
-router.get('/', (req, res) => {
-    let productosFiltrados = [...productos];
-
+router.get('/', async (req, res) => {
     const { query } = req;
+    try {
+        const productos = await Producto.findAll();
+        let productosFiltrados = [...productos];
 
-    if (query.precioMinimo) {
-        productosFiltrados = productosFiltrados.filter(p => p.precio >= parseFloat(query.precioMinimo));
+        if (query.precioMinimo) {
+            productosFiltrados = productosFiltrados.filter(p => p.precio >= parseFloat(query.precioMinimo));
+        }
+
+        if (query.precioMaximo) {
+            productosFiltrados = productosFiltrados.filter(p => p.precio <= parseFloat(query.precioMaximo));
+        }
+
+        if (query.nombre) {
+            productosFiltrados = productosFiltrados.filter(p => p.nombre.toLowerCase().includes(query.nombre.toLowerCase()));
+        }
+
+        if (query.categoria) {
+            productosFiltrados = productosFiltrados.filter(p => p.categoria.toLowerCase().includes(query.categoria.toLowerCase()));
+        }
+
+        if (productosFiltrados.length === 0) {
+            res.status(404).json({ success: true, result: productosFiltrados, message: 'No se encontraron productos...' });
+        }
+
+        res.status(200).json({ success: true, result: productosFiltrados, message: 'Productos obtenidos con exito' });
+
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'Error al obtener los productos...' });
     }
 
-    if (query.precioMaximo) {
-        productosFiltrados = productosFiltrados.filter(p => p.precio <= parseFloat(query.precioMaximo));
-    }
 
-    if (query.nombre) {
-        productosFiltrados = productosFiltrados.filter(p => p.nombre.toLowerCase().includes(query.nombre.toLowerCase()));
-    }
-
-    if (query.categoria) {
-        productosFiltrados = productosFiltrados.filter(p => p.categoria.toLowerCase().includes(query.categoria.toLowerCase()));
-    }
-
-    return res.status(200).json(productosFiltrados);
+    // return res.status(200).json(productosFiltrados);
 });
 
-router.get('/promedio', (req, res) => {
+router.get('/promedio', async (req, res) => {
     const { params, query } = req;
     let precios_totales = 0;
     let resultado_promedio = 0;
-    let filteredProductos = [...productos];
     let respuesta = {};
 
-    if (query.categoria) {
-        filteredProductos = filteredProductos.filter(p => p.categoria.toLowerCase().includes(query.categoria.toLowerCase()));
-        if (filteredProductos.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron productos con esa categoria' });
+    try {
+        const productos = await Producto.findAll();
+        let filteredProductos = [...productos];
+        if (query.categoria) {
+            filteredProductos = filteredProductos.filter(p => p.categoria.toLowerCase().includes(query.categoria.toLowerCase()));
+            if (filteredProductos.length === 0) {
+                return res.status(404).json({ message: 'No se encontraron productos con esa categoria' });
+            }
+            respuesta['categoria'] = filteredProductos[0].categoria;
+            filteredProductos.forEach((p, i) => {
+                precios_totales += p.precio;
+            });
         }
-        respuesta['categoria'] = filteredProductos[0].categoria;
+
+        resultado_promedio = parseFloat((precios_totales / filteredProductos.length).toFixed(2));
+        respuesta[`promedio_precios`] = resultado_promedio;
+
+        return res.status(200).json(respuesta)
+
+    } catch (error) {
+        return res.status(400).json({ success: false, message: 'Error al obtener los productos...' });
     }
-
-    filteredProductos.forEach((p, i) => {
-        precios_totales += p.precio;
-    });
-
-    resultado_promedio = parseFloat((precios_totales / productos.length).toFixed(2));
-
-    respuesta[`promedio_precios`] = resultado_promedio;
-
-    return res.status(200).json(respuesta)
 });
 
 router.get('/top', (req, res) => {
@@ -129,17 +145,22 @@ router.post('/codificar', (req, res) => {
 });
 
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     const { body } = req;
 
-    // Verifica si req.body es undefined
-    if (!body) {
-        return res.status(400).json({ error: 'El cuerpo de la solicitud no puede estar vacío.' });
-    }
+    try {
+        await Producto.sync();
+        const nuevoProducto = await Producto.create({
+            nombre: body.nombre,
+            precio: body.precio,
+            categoria: body.categoria
+        })
 
-    nuevoProducto = { id: productos.length + 1, nombre: body.nombre, precio: body.precio, categoria: body.categoria };
-    productos.push(nuevoProducto);
-    return res.status(201).json(nuevoProducto);
+        res.status(201).json({ success: true, result: nuevoProducto, message: 'Producto creado con exito' });
+
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'El cuerpo de la solicitud no puede estar vacío.' });
+    }
 })
 
 module.exports = router;
